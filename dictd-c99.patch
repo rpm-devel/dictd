@@ -1,0 +1,90 @@
+Consolidate all lexer/parser declarations in lexparse.h and include
+this file in both the generated lexers and parsers and the code that
+invokes them.
+
+This avoids implicit function declarations and build failures with
+future compilers.
+
+Submitted upstream: <https://sourceforge.net/p/dict/mailman/message/37772919/>
+
+diff -ur dictd-1.12.1.orig/clientparse.y dictd-1.12.1/clientparse.y
+--- dictd-1.12.1.orig/clientparse.y	2008-12-07 17:50:05.000000000 +0100
++++ dictd-1.12.1/clientparse.y	2023-02-02 17:24:40.745626699 +0100
+@@ -20,6 +20,7 @@
+ 
+ %{
+ #include "dict.h"
++#include "lexparse.h"
+ #define YYDEBUG 1
+ #define YYERROR_VERBOSE
+ 
+diff -ur dictd-1.12.1.orig/clientscan.l dictd-1.12.1/clientscan.l
+--- dictd-1.12.1.orig/clientscan.l	2008-12-07 17:50:05.000000000 +0100
++++ dictd-1.12.1/clientscan.l	2023-02-02 17:24:40.745626699 +0100
+@@ -24,9 +24,7 @@
+ 
+ #include "dict.h"
+ #include "clientparse.h"
+-extern int  yylex( void );
+-extern int  yydebug;
+-extern void yyerror( const char *message );
++#include "lexparse.h"
+ #define RETURN(val) do {                  \
+    yylval.token.src = src_get( yyleng );  \
+    return val;                            \
+diff -ur dictd-1.12.1.orig/lexparse.h dictd-1.12.1/lexparse.h
+--- dictd-1.12.1.orig/lexparse.h	2023-02-02 17:26:45.585386576 +0100
++++ dictd-1.12.1/lexparse.h	2023-02-02 17:42:35.003954718 +0100
+@@ -0,0 +1,8 @@
++/* Shared prototypes for lexers and parsers. */
++
++extern int  yylex( void );
++extern int  yydebug;
++extern void yyerror( const char *message );
++extern int yydebug;
++extern FILE *yyin;
++extern int yyparse( void );
+diff -ur dictd-1.12.1.orig/parse.c dictd-1.12.1/parse.c
+--- dictd-1.12.1.orig/parse.c	2008-12-07 17:50:05.000000000 +0100
++++ dictd-1.12.1/parse.c	2023-02-02 17:31:20.149658981 +0100
+@@ -24,14 +24,11 @@
+ #include "dictP.h"
+ #include "maa.h"
+ #include "parse.h"
++#include "lexparse.h"
+ 
+ static int           _prs_debug_flag   = 0;
+ static const char    *_prs_cpp_options = NULL;
+ 
+-extern int        yydebug;
+-extern FILE       *yyin;
+-extern int        yyparse( void );
+-
+ /* \doc |prs_set_debug| specifies the value of |yyerror| that |prs_file|
+    will use. */
+ 
+diff -ur dictd-1.12.1.orig/servparse.y dictd-1.12.1/servparse.y
+--- dictd-1.12.1.orig/servparse.y	2008-12-07 17:50:05.000000000 +0100
++++ dictd-1.12.1/servparse.y	2023-02-02 17:24:40.745626699 +0100
+@@ -24,6 +24,7 @@
+ #include "index.h"
+ #include "data.h"
+ #include "maa.h"
++#include "lexparse.h"
+ 
+ #define YYDEBUG 1
+ #define YYERROR_VERBOSE
+diff -ur dictd-1.12.1.orig/servscan.l dictd-1.12.1/servscan.l
+--- dictd-1.12.1.orig/servscan.l	2008-12-07 17:50:05.000000000 +0100
++++ dictd-1.12.1/servscan.l	2023-02-02 17:24:40.745626699 +0100
+@@ -22,9 +22,7 @@
+ %{
+ #include "dictd.h"
+ #include "servparse.h"
+-extern int  yylex( void );
+-extern int  yydebug;
+-extern void yyerror( const char *message );
++#include "lexparse.h"
+ static void include_file( void );
+ static void include_complete( void );
+ YY_BUFFER_STATE orig_buffer = NULL;
