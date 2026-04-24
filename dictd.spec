@@ -14,8 +14,8 @@
 
 Summary:   DICT protocol (RFC 2229) server and command-line client
 Name:      dictd
-Version:   1.12.1
-Release:   33%{?dist}
+Version:   1.13.1
+Release:   1%{?dist}
 License:   GPL+ and zlib and MIT
 Source0:   http://downloads.sourceforge.net/dict/%{name}-%{version}.tar.gz
 Source1:   dictd.service
@@ -30,7 +30,11 @@ URL:       http://www.dict.org/
 BuildRequires:  flex bison libtool libtool-ltdl-devel byacc
 BuildRequires:  libdbi-devel, zlib-devel, gawk, gcc
 %if %{with systemd}
+%if 0%{?rhel} >= 8 || 0%{?fedora}
+BuildRequires:  systemd-rpm-macros
+%else
 BuildRequires:  systemd
+%endif
 %endif
 BuildRequires:	checkpolicy, selinux-policy-devel
 BuildRequires: make
@@ -46,9 +50,7 @@ language dictionary databases.
 %package server
 Summary: Server for the Dictionary Server Protocol (DICT)
 %if %{with systemd}
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
+%{?systemd_requires}
 %else
 Requires(post):  chkconfig
 Requires(preun): chkconfig
@@ -193,6 +195,12 @@ exit 0
 %{_datadir}/selinux/*/dictd2.pp
 
 %changelog
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 1.13.1-1
+- Update to 1.13.1
+
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 1.12.1-34
+- Modernize spec for AlmaLinux 10: remove BuildRoot, %%clean, %%defattr, Group tag
+
 * Thu Feb 02 2023 Florian Weimer <fweimer@redhat.com> - 1.12.1-33
 - Fix C99 compatibility issues in lexer/parser integration
 
